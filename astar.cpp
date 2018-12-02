@@ -2,6 +2,7 @@
 #include <vector>
 #include <random>
 #include <limits>
+#include <string>
 
 using namespace std;
 
@@ -88,6 +89,18 @@ bool is_in_list(const vector<node*> * const list, const node * const n_to_find) 
 	}
 	// return false if (pointer to) node not found 
 	return false;
+}
+
+// checks if (pointer to) node appears in open or closed list
+bool in_open_or_closed(const node * const n_to_find) {
+	// check if node is in closed list
+	if (is_in_list(&closed_list, n_to_find)) {
+		return true;
+	}
+	// if not, check if node is in open list
+	else {
+		return is_in_list(&open_list, n_to_find);
+	}
 }
 
 // randomly populate the graph with start, finish and obstacles
@@ -201,17 +214,29 @@ vector<node*> get_adj_nodes(const node * const n) {
 	// for NSWE, add (pointer to) adjacent node to vector if
 	// it is valid (within bounds of graph) and is either 
 	// a standard node or the finish node
-	if (north >= 0 && (M[north][col].type < 2)) {
-		adj_nodes.push_back(&M[north][col]);
+	if (north >= 0) {
+		node *north_node = &M[north][col];
+		if (north_node->type < 2) {
+			adj_nodes.push_back(north_node);
+		}
 	}
-	if (south <= SIZE - 1 && (M[south][col].type < 2)) {
-		adj_nodes.push_back(&M[south][col]);
+	if (south <= SIZE - 1) {
+		node *south_node = &M[south][col];
+		if (south_node->type < 2) {
+			adj_nodes.push_back(south_node);
+		}
 	}
-	if (west >= 0 && (M[row][west].type < 2)) {
-		adj_nodes.push_back(&M[row][west]);
+	if (west >= 0) {
+		node *west_node = &M[row][west];
+		if (west_node->type < 2) {
+			adj_nodes.push_back(west_node);
+		}
 	}
-	if (east <= SIZE - 1 && (M[row][east].type < 2)) {
-		adj_nodes.push_back(&M[row][east]);
+	if (east <= SIZE - 1) {
+		node *east_node = &M[row][east];
+		if (east_node->type < 2) {
+			adj_nodes.push_back(east_node);
+		}
 	}
 	
 	// return vector of (pointers to) adjacent nodes
@@ -244,19 +269,18 @@ bool astar() {
 			// for (pointer to) each adjacent node which is not an obstacle or the start
 			for (node *n : get_adj_nodes(current_node)) {
 				// check whether (pointer to) this node occurs in open or closed list
-				bool in_closed_list = is_in_list(&closed_list, n);
-				bool in_open_list = is_in_list(&open_list, n);
+				bool in_either_list = in_open_or_closed(n);
 				// if (pointer to) node is present in open or closed lists and current g is lower
 				// i.e. current path to this node is shorter than one previously found
 				// update g of node and change its parent to current node
-				if (next_g < n->g && (in_closed_list || in_open_list)) {
+				if (next_g < n->g && in_either_list) {
 					n->g = next_g;
 					n->parent = current_node;
 				}
 				// if node is not in either list, set its g to current g
 				// and its parent to (pointer to) the current node, and
 				// add it to the open list
-				else if (!in_closed_list && !in_open_list) {
+				else if (!in_either_list) {
 					n->parent = current_node;
 					n->g = next_g;
 					add_to_open_list(n);
@@ -314,4 +338,3 @@ int main() {
 	}
 	return 0;
 }
-
